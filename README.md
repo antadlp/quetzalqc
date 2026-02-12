@@ -2,6 +2,8 @@
 
 **QuetzalQC** is a modular, research-oriented quantum chemistry engine built in Python using PyTorch for linear algebra and designed for extensibility toward DFT, post-HF methods, and molecular dynamics.
 
+> **Note:** This README uses LaTeX math blocks (`$$...$$`), which render on GitHub.
+
 The current implementation provides a fully modular **Restricted Hartree-Fock (RHF)** solver validated against reference implementations.
 
 ---
@@ -30,14 +32,15 @@ The guiding principles are:
 
 Within the Born-Oppenheimer approximation, the electronic Hamiltonian is:
 
-```text
-H_elec =
-sum_i [
-  -(1/2) nabla_i^2
-  - sum_A Z_A / |r_i - R_A|
-]
-+ sum_{i<j} 1 / |r_i - r_j|
-```
+$$
+\hat{H}_{elec} =
+\sum_i \left(
+-\frac{1}{2} \nabla_i^2
+- \sum_A \frac{Z_A}{|\mathbf{r}_i - \mathbf{R}_A|}
+\right)
++
+\sum_{i<j} \frac{1}{|\mathbf{r}_i - \mathbf{r}_j|}
+$$
 
 Exact solutions are intractable for multi-electron systems.
 
@@ -49,15 +52,16 @@ The wavefunction is approximated as a single Slater determinant.
 
 Molecular orbitals are expanded in a finite basis:
 
-```text
-phi_i(r) = sum_mu C_{mu i} chi_mu(r)
-```
+$$
+\phi_i(\mathbf{r}) =
+\sum_\mu C_{\mu i} \chi_\mu(\mathbf{r})
+$$
 
 The Roothaan equations are:
 
-```text
-F C = S C epsilon
-```
+$$
+\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\bm{\varepsilon}
+$$
 
 where:
 
@@ -69,27 +73,35 @@ where:
 
 ## Fock Matrix
 
-```text
-F_{mu nu} = H_{mu nu} + J_{mu nu} - (1/2) K_{mu nu}
-```
+$$
+F_{\mu\nu} = H_{\mu\nu} + J_{\mu\nu} - \frac{1}{2} K_{\mu\nu}
+$$
 
 Coulomb matrix:
 
-```text
-J_{mu nu} = sum_{lambda sigma} P_{lambda sigma} (mu nu | lambda sigma)
-```
+$$
+J_{\mu\nu} =
+\sum_{\lambda\sigma}
+P_{\lambda\sigma}
+(\mu\nu|\lambda\sigma)
+$$
 
 Exchange matrix:
 
-```text
-K_{mu nu} = sum_{lambda sigma} P_{lambda sigma} (mu lambda | nu sigma)
-```
+$$
+K_{\mu\nu} =
+\sum_{\lambda\sigma}
+P_{\lambda\sigma}
+(\mu\lambda|\nu\sigma)
+$$
 
 Density matrix:
 
-```text
-P_{mu nu} = 2 * sum_{i in occ} C_{mu i} C_{nu i}
-```
+$$
+P_{\mu\nu} =
+2\sum_i^{occ}
+C_{\mu i} C_{\nu i}
+$$
 
 ---
 
@@ -97,23 +109,29 @@ P_{mu nu} = 2 * sum_{i in occ} C_{mu i} C_{nu i}
 
 The RHF procedure iteratively solves:
 
-```text
-P^(n) -> F^(n) -> C^(n) -> P^(n+1)
-```
+$$
+\mathbf{P}^{(n)}
+\rightarrow
+\mathbf{F}^{(n)}
+\rightarrow
+\mathbf{C}^{(n)}
+\rightarrow
+\mathbf{P}^{(n+1)}
+$$
 
 until:
 
-```text
-||P^(n+1) - P^(n)|| < delta
-```
+$$
+\|\mathbf{P}^{(n+1)} - \mathbf{P}^{(n)}\| < \delta
+$$
 
 ---
 
 ## Total Energy
 
-```text
-E = (1/2) * Tr[ P (H + F) ] + E_nuc
-```
+$$
+E = \frac{1}{2}\mathrm{Tr}\left[\mathbf{P}(\mathbf{H}+\mathbf{F})\right] + E_{nuc}
+$$
 
 ---
 
@@ -156,9 +174,9 @@ The SCF driver is backend-agnostic.
 
 Solves the generalized eigenvalue problem:
 
-```text
-F C = S C epsilon
-```
+$$
+\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\bm{\varepsilon}
+$$
 
 using symmetric orthogonalization.
 
@@ -168,9 +186,9 @@ using symmetric orthogonalization.
 
 Builds:
 
-```text
-P = 2 C_occ C_occ^T
-```
+$$
+\mathbf{P} = 2\mathbf{C}_{occ}\mathbf{C}_{occ}^{T}
+$$
 
 ---
 
@@ -178,9 +196,9 @@ P = 2 C_occ C_occ^T
 
 Handles the computational bottleneck:
 
-```text
+$$
 O(N^4)
-```
+$$
 
 via explicit tensor contractions.
 
@@ -240,9 +258,9 @@ python -m pytest -q
 
 The dominant cost is:
 
-```text
+$$
 O(N^4)
-```
+$$
 
 from Coulomb and exchange contractions.
 

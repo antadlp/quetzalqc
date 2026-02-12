@@ -33,13 +33,9 @@ The guiding principles are:
 Within the Born-Oppenheimer approximation, the electronic Hamiltonian is:
 
 $$
-\hat{H}_{elec} =
-\sum_i \left(
--\frac{1}{2} \nabla_i^2
-- \sum_A \frac{Z_A}{|\mathbf{r}_i - \mathbf{R}_A|}
-\right)
-+
-\sum_{i<j} \frac{1}{|\mathbf{r}_i - \mathbf{r}_j|}
+\hat{H}_{\mathrm{elec}} =
+\sum_i \left( -\frac{1}{2}\nabla_i^2 - \sum_A \frac{Z_A}{\left|\mathbf{r}_i - \mathbf{R}_A\right|} \right)
++ \sum_{i<j} \frac{1}{\left|\mathbf{r}_i - \mathbf{r}_j\right|}
 $$
 
 Exact solutions are intractable for multi-electron systems.

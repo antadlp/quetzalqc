@@ -47,8 +47,7 @@ The wavefunction is approximated as a single Slater determinant.
 Molecular orbitals are expanded in a finite basis:
 
 $$
-\phi_i(\mathbf{r}) =
-\sum_\mu C_{\mu i} \chi_\mu(\mathbf{r})
+\phi_i(\mathbf{r})=\sum_\mu C_{\mu i}\chi_\mu(\mathbf{r})
 $$
 
 The Roothaan equations are:
@@ -74,27 +73,19 @@ $$
 Coulomb matrix:
 
 $$
-J_{\mu\nu} =
-\sum_{\lambda\sigma}
-P_{\lambda\sigma}
-(\mu\nu|\lambda\sigma)
+J_{\mu\nu}=\sum_{\lambda\sigma}P_{\lambda\sigma}(\mu\nu|\lambda\sigma)
 $$
 
 Exchange matrix:
 
 $$
-K_{\mu\nu} =
-\sum_{\lambda\sigma}
-P_{\lambda\sigma}
-(\mu\lambda|\nu\sigma)
+K_{\mu\nu}=\sum_{\lambda\sigma}P_{\lambda\sigma}(\mu\lambda|\nu\sigma)
 $$
 
 Density matrix:
 
 $$
-P_{\mu\nu} =
-2\sum_i^{occ}
-C_{\mu i} C_{\nu i}
+P_{\mu\nu}=2\sum_i^{occ}C_{\mu i}C_{\nu i}
 $$
 
 ---
@@ -104,13 +95,7 @@ $$
 The RHF procedure iteratively solves:
 
 $$
-\mathbf{P}^{(n)}
-\rightarrow
-\mathbf{F}^{(n)}
-\rightarrow
-\mathbf{C}^{(n)}
-\rightarrow
-\mathbf{P}^{(n+1)}
+\mathbf{P}^{(n)}\rightarrow\mathbf{F}^{(n)}\rightarrow\mathbf{C}^{(n)}\rightarrow\mathbf{P}^{(n+1)}
 $$
 
 until:

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quetzalqc"
+version = "0.1.0"
+description = "Modular quantum chemistry prototype"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "torch",
+  "pyscf",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+  "matplotlib",
+]
+
+[tool.setuptools.packages.find]
+include = ["quetzalqc*"]

@@ -1,0 +1,178 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb, bm}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\title{Mathematical Formulation of the Restricted Hartree--Fock Algorithm Implemented in \texttt{QuetzalQC}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Electronic Structure Problem}
+
+Within the Born--Oppenheimer approximation, the electronic Hamiltonian for a fixed nuclear configuration is
+
+\begin{equation}
+\hat{H}_{elec} =
+\sum_{i}^{N} \left(
+-\frac{1}{2} \nabla_i^2
+- \sum_{A} \frac{Z_A}{|\mathbf{r}_i - \mathbf{R}_A|}
+\right)
++
+\sum_{i<j}^{N} \frac{1}{|\mathbf{r}_i - \mathbf{r}_j|}.
+\end{equation}
+
+The electronic Schrödinger equation is
+
+\begin{equation}
+\hat{H}_{elec} \Psi = E \Psi.
+\end{equation}
+
+An exact solution is intractable for multi-electron systems, therefore approximations are required.
+
+\section{Hartree--Fock Approximation}
+
+In the Restricted Hartree--Fock (RHF) approach, the many-electron wavefunction is approximated by a single Slater determinant constructed from spatial orbitals:
+
+\begin{equation}
+\Psi = \frac{1}{\sqrt{N!}} \det \left[ \chi_i(\mathbf{x}_j) \right],
+\end{equation}
+
+where spin-orbitals are products of spatial orbitals and spin functions.
+
+For closed-shell systems, each spatial orbital is doubly occupied.
+
+\section{Basis Set Expansion}
+
+Each molecular orbital is expanded in a finite atomic orbital (AO) basis:
+
+\begin{equation}
+\phi_i(\mathbf{r}) = \sum_{\mu}^{K} C_{\mu i} \, \chi_\mu(\mathbf{r}),
+\end{equation}
+
+where $\{ \chi_\mu \}$ are basis functions (e.g., STO-3G).
+
+\section{Roothaan--Hall Equations}
+
+The Hartree--Fock equations in a non-orthogonal AO basis reduce to the generalized eigenvalue problem:
+
+\begin{equation}
+\mathbf{F} \mathbf{C} = \mathbf{S} \mathbf{C} \bm{\varepsilon},
+\end{equation}
+
+where
+
+\begin{itemize}
+\item $\mathbf{S}_{\mu\nu} = \langle \chi_\mu | \chi_\nu \rangle$ is the overlap matrix,
+\item $\mathbf{F}$ is the Fock matrix,
+\item $\bm{\varepsilon}$ is the diagonal matrix of orbital energies.
+\end{itemize}
+
+\section{Fock Matrix Construction}
+
+The Fock matrix is defined as
+
+\begin{equation}
+F_{\mu\nu} = H_{\mu\nu} + J_{\mu\nu} - \frac{1}{2} K_{\mu\nu},
+\end{equation}
+
+where
+
+\begin{equation}
+H_{\mu\nu} = T_{\mu\nu} + V_{\mu\nu}
+\end{equation}
+
+is the one-electron Hamiltonian matrix.
+
+The Coulomb and exchange matrices are given by
+
+\begin{equation}
+J_{\mu\nu} =
+\sum_{\lambda\sigma}
+P_{\lambda\sigma}
+(\mu\nu|\lambda\sigma),
+\end{equation}
+
+\begin{equation}
+K_{\mu\nu} =
+\sum_{\lambda\sigma}
+P_{\lambda\sigma}
+(\mu\lambda|\nu\sigma),
+\end{equation}
+
+where $(\mu\nu|\lambda\sigma)$ are the two-electron repulsion integrals.
+
+\section{Density Matrix}
+
+For a closed-shell system, the density matrix is
+
+\begin{equation}
+P_{\mu\nu} =
+2 \sum_{i}^{occ}
+C_{\mu i} C_{\nu i}.
+\end{equation}
+
+\section{Self-Consistent Field Procedure}
+
+The algorithm iteratively solves:
+
+\begin{enumerate}
+\item Construct $\mathbf{F}$ from current $\mathbf{P}$.
+\item Solve $\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\bm{\varepsilon}$.
+\item Build new density matrix $\mathbf{P}$.
+\item Repeat until convergence:
+\[
+\|\mathbf{P}^{(n+1)} - \mathbf{P}^{(n)}\| < \delta.
+\]
+\end{enumerate}
+
+This defines a fixed-point problem:
+
+\begin{equation}
+\mathbf{P} = \mathcal{F}(\mathbf{P}).
+\end{equation}
+
+\section{Total Energy Expression}
+
+The RHF total energy is
+
+\begin{equation}
+E =
+\frac{1}{2}
+\mathrm{Tr}
+\left[
+\mathbf{P}
+(\mathbf{H} + \mathbf{F})
+\right]
++ E_{nuc},
+\end{equation}
+
+where $E_{nuc}$ is the nuclear repulsion energy.
+
+\section{Computational Scaling}
+
+The dominant cost arises from evaluation of the Coulomb and exchange contractions:
+
+\[
+\mathcal{O}(K^4),
+\]
+
+where $K$ is the number of basis functions.
+
+\section{Current Scope}
+
+The present implementation:
+
+\begin{itemize}
+\item Uses STO-3G basis.
+\item Solves the RHF equations for small molecules (e.g., H$_2$).
+\item Employs a modular SCF architecture.
+\item Validates results against reference implementations.
+\end{itemize}
+
+\end{document}
+

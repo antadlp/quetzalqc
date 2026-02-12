@@ -1,0 +1,262 @@
+\documentclass[11pt]{article}
+
+\usepackage{amsmath, amssymb, bm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\geometry{margin=2.5cm}
+
+\title{Technical Design and Software Architecture of the RHF Core in \texttt{QuetzalQC}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+\texttt{QuetzalQC} is designed as a modular quantum chemistry research engine.
+The current implementation focuses on a Restricted Hartree--Fock (RHF) solver
+built using PyTorch for linear algebra operations, with integral evaluation
+delegated to a backend provider (PySCF).
+
+The architecture separates:
+
+\begin{itemize}
+\item Mathematical formulation
+\item Linear algebra utilities
+\item Density construction
+\item Coulomb and exchange contraction
+\item SCF control flow
+\item Backend integral provider
+\end{itemize}
+
+This modularization allows independent optimization and future extensibility.
+
+\section{Module Architecture}
+
+The core structure is:
+
+\begin{verbatim}
+quetzalqc/
+  backends/
+      pyscf_backend.py
+  core/
+      linalg.py
+      density.py
+      jk.py
+      energy.py
+      diis.py
+      rhf.py
+\end{verbatim}
+
+Each module corresponds directly to a mathematical component of the RHF equations.
+
+\section{Backend Abstraction Layer}
+
+\subsection{PySCF Backend}
+
+The backend provides:
+
+\begin{itemize}
+\item Overlap matrix $\mathbf{S}$
+\item One-electron Hamiltonian $\mathbf{H}$
+\item Two-electron integrals $(\mu\nu|\lambda\sigma)$
+\item Nuclear repulsion energy $E_{nuc}$
+\item Electron count $N$
+\end{itemize}
+
+The SCF driver is backend-agnostic; only these tensors are required.
+This enables replacement by:
+
+\begin{itemize}
+\item Custom integral engines
+\item Density-fitting backends
+\item GPU-based integral evaluation
+\end{itemize}
+
+\section{Linear Algebra Layer}
+
+File: \texttt{core/linalg.py}
+
+Responsible for solving the generalized eigenvalue problem:
+
+\[
+\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\bm{\varepsilon}.
+\]
+
+The implementation uses symmetric orthogonalization:
+
+\[
+\mathbf{X} = \mathbf{S}^{-1/2}.
+\]
+
+Transformation:
+
+\[
+\mathbf{F}' = \mathbf{X}^T \mathbf{F} \mathbf{X}.
+\]
+
+This reduces the problem to a standard Hermitian diagonalization.
+
+This design ensures:
+
+\begin{itemize}
+\item Numerical stability
+\item Compatibility with PyTorch eigensolvers
+\item Clear separation of mathematical transformation
+\end{itemize}
+
+\section{Density Module}
+
+File: \texttt{core/density.py}
+
+Implements:
+
+\[
+\mathbf{P} = 2 \mathbf{C}_{occ} \mathbf{C}_{occ}^T.
+\]
+
+This is independent of how orbitals were obtained,
+allowing future reuse for:
+
+\begin{itemize}
+\item DFT
+\item Post-HF methods
+\item Finite-temperature occupations
+\end{itemize}
+
+\section{Coulomb and Exchange Contractions}
+
+File: \texttt{core/jk.py}
+
+Implements tensor contractions:
+
+\[
+J_{\mu\nu} =
+\sum_{\lambda\sigma}
+P_{\lambda\sigma}
+(\mu\nu|\lambda\sigma),
+\]
+
+\[
+K_{\mu\nu} =
+\sum_{\lambda\sigma}
+P_{\lambda\sigma}
+(\mu\lambda|\nu\sigma).
+\]
+
+Implemented using \texttt{torch.einsum}.
+
+This module isolates the $O(N^4)$ scaling component,
+facilitating later optimization via:
+
+\begin{itemize}
+\item Density fitting
+\item GPU kernels
+\item CUTLASS tensor contractions
+\end{itemize}
+
+\section{Energy Evaluation}
+
+File: \texttt{core/energy.py}
+
+Implements the RHF total energy:
+
+\[
+E =
+\frac{1}{2}
+\mathrm{Tr}
+\left[
+\mathbf{P}
+(\mathbf{H} + \mathbf{F})
+\right]
++ E_{nuc}.
+\]
+
+Separated to allow:
+
+\begin{itemize}
+\item Alternative energy expressions
+\item DFT energy functional insertion
+\item Energy decomposition analysis
+\end{itemize}
+
+\section{DIIS Acceleration}
+
+File: \texttt{core/diis.py}
+
+Implements Direct Inversion in the Iterative Subspace (DIIS),
+using the commutator error:
+
+\[
+\mathbf{e} = \mathbf{F}\mathbf{P}\mathbf{S}
+- \mathbf{S}\mathbf{P}\mathbf{F}.
+\]
+
+This improves convergence robustness without modifying
+core RHF equations.
+
+\section{SCF Driver}
+
+File: \texttt{core/rhf.py}
+
+The SCF driver orchestrates:
+
+\begin{enumerate}
+\item Initial guess from core Hamiltonian
+\item Fock construction
+\item Generalized eigenvalue solve
+\item Density update
+\item Convergence test
+\end{enumerate}
+
+This driver contains no integral logic,
+no hardcoded basis assumptions,
+and no backend dependency beyond tensor inputs.
+
+\section{Data Flow}
+
+The RHF iteration cycle is:
+
+\[
+\mathbf{P}^{(n)}
+\rightarrow
+\mathbf{F}^{(n)}
+\rightarrow
+\mathbf{C}^{(n)}
+\rightarrow
+\mathbf{P}^{(n+1)}.
+\]
+
+This defines a nonlinear fixed-point problem:
+
+\[
+\mathbf{P} = \mathcal{F}(\mathbf{P}).
+\]
+
+\section{Design Principles}
+
+\begin{itemize}
+\item \textbf{Modularity:} Each mathematical concept corresponds to a module.
+\item \textbf{Backend abstraction:} Integrals separated from SCF logic.
+\item \textbf{Numerical transparency:} Explicit tensor operations.
+\item \textbf{Extensibility:} Ready for DFT, post-HF, and GPU acceleration.
+\item \textbf{Reproducibility:} Validated against PySCF.
+\end{itemize}
+
+\section{Future Extensions}
+
+Planned extensions include:
+
+\begin{itemize}
+\item LDA/GGA DFT modules
+\item Density fitting (RI) acceleration
+\item CUDA-optimized tensor contractions
+\item Analytical nuclear gradients
+\item Born--Oppenheimer molecular dynamics
+\end{itemize}
+
+\end{document}
+

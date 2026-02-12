@@ -1,8 +1,3 @@
-# 📄 README.md propuesto para `quetzalqc`
-
-
----
-
 # QuetzalQC
 
 **QuetzalQC** is a modular, research-oriented quantum chemistry engine built in Python using PyTorch for linear algebra and designed for extensibility toward DFT, post-HF methods, and molecular dynamics.

@@ -2,9 +2,7 @@
 
 **QuetzalQC** is a modular, research-oriented quantum chemistry engine built in Python using PyTorch for linear algebra and designed for extensibility toward DFT, post-HF methods, and molecular dynamics.
 
-> **Note:** GitHub's Markdown renderer does not natively display LaTeX equations. The math below uses `$$...$$` syntax which is supported by GitHub via KaTeX, but you may need to view this file in a renderer that understands MathJax/KaTeX (e.g. a local Markdown viewer or GitHub Pages with math enabled) to see properly formatted equations.
-
-The current implementation provides a fully modular **Restricted Hartree–Fock (RHF)** solver validated against reference implementations.
+The current implementation provides a fully modular **Restricted Hartree-Fock (RHF)** solver validated against reference implementations.
 
 ---
 
@@ -30,39 +28,36 @@ The guiding principles are:
 
 ## Electronic Structure Problem
 
-Within the Born–Oppenheimer approximation, the electronic Hamiltonian is:
+Within the Born-Oppenheimer approximation, the electronic Hamiltonian is:
 
-$$
-\hat{H}_{elec} =
-\sum_i \left(
--\frac{1}{2} \nabla_i^2
-- \sum_A \frac{Z_A}{|\mathbf{r}_i - \mathbf{R}_A|}
-\right)
-+
-\sum_{i<j} \frac{1}{|\mathbf{r}_i - \mathbf{r}_j|}
-$$
+```text
+H_elec =
+sum_i [
+  -(1/2) nabla_i^2
+  - sum_A Z_A / |r_i - R_A|
+]
++ sum_{i<j} 1 / |r_i - r_j|
+```
 
 Exact solutions are intractable for multi-electron systems.
 
 ---
 
-## Restricted Hartree–Fock Approximation
+## Restricted Hartree-Fock Approximation
 
 The wavefunction is approximated as a single Slater determinant.
 
 Molecular orbitals are expanded in a finite basis:
 
-$$
-\phi_i(\mathbf{r}) =
-\sum_\mu C_{\mu i} \chi_\mu(\mathbf{r})
-$$
+```text
+phi_i(r) = sum_mu C_{mu i} chi_mu(r)
+```
 
 The Roothaan equations are:
 
-$$
-\mathbf{F} \mathbf{C} =
-\mathbf{S} \mathbf{C} \bm{\varepsilon}
-$$
+```text
+F C = S C epsilon
+```
 
 where:
 
@@ -74,40 +69,27 @@ where:
 
 ## Fock Matrix
 
-$$
-F_{\mu\nu} =
-H_{\mu\nu}
-+
-J_{\mu\nu}
--
-\frac{1}{2} K_{\mu\nu}
-$$
+```text
+F_{mu nu} = H_{mu nu} + J_{mu nu} - (1/2) K_{mu nu}
+```
 
 Coulomb matrix:
 
-$$
-J_{\mu\nu} =
-\sum_{\lambda\sigma}
-P_{\lambda\sigma}
-(\mu\nu|\lambda\sigma)
-$$
+```text
+J_{mu nu} = sum_{lambda sigma} P_{lambda sigma} (mu nu | lambda sigma)
+```
 
 Exchange matrix:
 
-$$
-K_{\mu\nu} =
-\sum_{\lambda\sigma}
-P_{\lambda\sigma}
-(\mu\lambda|\nu\sigma)
-$$
+```text
+K_{mu nu} = sum_{lambda sigma} P_{lambda sigma} (mu lambda | nu sigma)
+```
 
 Density matrix:
 
-$$
-P_{\mu\nu} =
-2 \sum_{i}^{occ}
-C_{\mu i} C_{\nu i}
-$$
+```text
+P_{mu nu} = 2 * sum_{i in occ} C_{mu i} C_{nu i}
+```
 
 ---
 
@@ -115,68 +97,54 @@ $$
 
 The RHF procedure iteratively solves:
 
-$$
-\mathbf{P}^{(n)}
-\rightarrow
-\mathbf{F}^{(n)}
-\rightarrow
-\mathbf{C}^{(n)}
-\rightarrow
-\mathbf{P}^{(n+1)}
-$$
+```text
+P^(n) -> F^(n) -> C^(n) -> P^(n+1)
+```
 
 until:
 
-$$
-\|\mathbf{P}^{(n+1)} - \mathbf{P}^{(n)}\| < \delta
-$$
+```text
+||P^(n+1) - P^(n)|| < delta
+```
 
 ---
 
 ## Total Energy
 
-$$
-E =
-\frac{1}{2}
-\mathrm{Tr}
-\left[
-\mathbf{P}
-(\mathbf{H} + \mathbf{F})
-\right]
-+ E_{nuc}
-$$
+```text
+E = (1/2) * Tr[ P (H + F) ] + E_nuc
+```
 
 ---
 
 # Software Architecture
 
-```
-
+```text
 quetzalqc/
-backends/
-pyscf_backend.py
-core/
-linalg.py
-density.py
-jk.py
-energy.py
-diis.py
-rhf.py
-tests/
-examples/
-
-````
+  backends/
+    pyscf_backend.py
+  core/
+    linalg.py
+    density.py
+    jk.py
+    energy.py
+    diis.py
+    rhf.py
+  tests/
+  examples/
+```
 
 ---
 
 ## Module Responsibilities
 
 ### Backend Layer
+
 Provides:
 
 - Overlap matrix S
 - One-electron Hamiltonian H
-- Two-electron integrals (μν|λσ)
+- Two-electron integrals (mu nu | lambda sigma)
 - Nuclear repulsion energy
 - Electron count
 
@@ -185,39 +153,41 @@ The SCF driver is backend-agnostic.
 ---
 
 ### Linear Algebra Layer
+
 Solves the generalized eigenvalue problem:
 
-$$
-\mathbf{F} \mathbf{C} =
-\mathbf{S} \mathbf{C} \bm{\varepsilon}
-$$
+```text
+F C = S C epsilon
+```
 
 using symmetric orthogonalization.
 
 ---
 
 ### Density Module
+
 Builds:
 
-$$
-\mathbf{P} =
-2 \mathbf{C}_{occ} \mathbf{C}_{occ}^T
-$$
+```text
+P = 2 C_occ C_occ^T
+```
 
 ---
 
 ### JK Module
+
 Handles the computational bottleneck:
 
-$$
+```text
 O(N^4)
-$$
+```
 
 via explicit tensor contractions.
 
 ---
 
 ### SCF Driver
+
 Orchestrates:
 
 1. Initial guess
@@ -232,7 +202,7 @@ Orchestrates:
 
 ```bash
 pip install torch pyscf
-````
+```
 
 Clone the repository:
 
@@ -243,7 +213,7 @@ cd quetzalqc
 
 ---
 
-# Example: H₂ / STO-3G
+# Example: H2 / STO-3G
 
 ```bash
 python run_h2.py
@@ -251,8 +221,8 @@ python run_h2.py
 
 Expected output:
 
-* Convergence in a few iterations
-* Energy consistent with PySCF reference
+- Convergence in a few iterations
+- Energy consistent with PySCF reference
 
 ---
 
@@ -270,18 +240,18 @@ python -m pytest -q
 
 The dominant cost is:
 
-$$
+```text
 O(N^4)
-$$
+```
 
 from Coulomb and exchange contractions.
 
 Future acceleration strategies:
 
-* Density fitting (RI)
-* GPU tensor kernels
-* CUTLASS integration
-* Screening techniques
+- Density fitting (RI)
+- GPU tensor kernels
+- CUTLASS integration
+- Screening techniques
 
 ---
 
@@ -289,12 +259,12 @@ Future acceleration strategies:
 
 Planned extensions:
 
-* LDA / GGA DFT
-* Density fitting
-* Analytical gradients
-* CUDA acceleration
-* Born–Oppenheimer molecular dynamics
-* Differentiable electronic structure
+- LDA / GGA DFT
+- Density fitting
+- Analytical gradients
+- CUDA acceleration
+- Born-Oppenheimer molecular dynamics
+- Differentiable electronic structure
 
 ---
 
@@ -302,9 +272,9 @@ Planned extensions:
 
 QuetzalQC is designed as:
 
-* A transparent implementation of quantum chemistry algorithms
-* A research platform for experimentation
-* A bridge between physics, mathematics, and high-performance computing
+- A transparent implementation of quantum chemistry algorithms
+- A research platform for experimentation
+- A bridge between physics, mathematics, and high-performance computing
 
 ---
 

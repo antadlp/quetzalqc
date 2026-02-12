@@ -53,7 +53,7 @@ $$
 The Roothaan equations are:
 
 $$
-\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\bm{\varepsilon}
+\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\boldsymbol{\varepsilon}
 $$
 
 where:
@@ -154,7 +154,7 @@ The SCF driver is backend-agnostic.
 Solves the generalized eigenvalue problem:
 
 $$
-\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\bm{\varepsilon}
+\mathbf{F}\mathbf{C} = \mathbf{S}\mathbf{C}\boldsymbol{\varepsilon}
 $$
 
 using symmetric orthogonalization.

@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
+
 import torch
+
+# Allow running this script directly from the examples/ folder.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from quetzalqc.hf.pyscf_backend import MoleculeSpec, PySCFBackend
 from quetzalqc.hf.rhf import RHF, RHFConfig
